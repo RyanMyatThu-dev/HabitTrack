@@ -40,6 +40,8 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           npm install --global vercel@latest
-          # Copy vercel.json to the publish directory so it's included in the deployment
+          # Copy vercel.json into the folder
           cp vercel.json release/wwwroot/
-          vercel deploy --prod --token $VERCEL_TOKEN release/wwwroot --yes
+          # Deploy from inside the folder to avoid path confusion
+          cd release/wwwroot
+          vercel deploy --prod --token $VERCEL_TOKEN --yes
