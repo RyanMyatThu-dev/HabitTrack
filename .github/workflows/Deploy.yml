@@ -42,4 +42,4 @@ jobs:
           npm install --global vercel@latest
           # Copy vercel.json to the publish directory so it's included in the deployment
           cp vercel.json release/wwwroot/
-          vercel deploy --prebuilt --prod --token $VERCEL_TOKEN release/wwwroot
+          vercel deploy --prod --token $VERCEL_TOKEN release/wwwroot --yes
