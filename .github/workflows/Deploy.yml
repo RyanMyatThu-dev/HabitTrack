@@ -1,0 +1,45 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install NPM dependencies
+        run: npm install
+        working-directory: src/HabitTracker.Client
+
+      - name: Build Tailwind CSS
+        run: npm run build:css:release
+        working-directory: src/HabitTracker.Client
+
+      - name: Publish Blazor WebAssembly
+        run: dotnet publish src/HabitTracker.Client/HabitTracker.Client.csproj -c Release -o release
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install --global vercel@latest
+          # Copy vercel.json to the publish directory so it's included in the deployment
+          cp vercel.json release/wwwroot/
+          vercel deploy --prebuilt --prod --token $VERCEL_TOKEN release/wwwroot

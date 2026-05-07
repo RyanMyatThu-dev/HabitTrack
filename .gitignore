@@ -1,0 +1,31 @@
+.vs/
+
+# .NET
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Blazor WASM specific
+src/HabitTracker.Client/wwwroot/css/app.css
+# (Optional: If you want to build CSS on CI only, you might ignore it, but often it's included if built locally)
+# I'll keep app.css UN-ignored for now so it works immediately on push if they don't have CI setup perfectly yet.
+# Actually, the workflow builds it, so it's better to ignore it if it's an output.
+# But for a small project, sometimes it's easier to keep. 
+# I'll ignore bin/obj and node_modules for sure.

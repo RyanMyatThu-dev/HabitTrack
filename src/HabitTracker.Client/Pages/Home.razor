@@ -1,0 +1,203 @@
+@page "/"
+@using HabitTracker.Application.DTOs
+@using HabitTracker.Application.Services
+@inject IHabitService HabitService
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Stats Row -->
+    <div class="lg:col-span-2 space-y-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card bg-primary-600 border-none text-white overflow-hidden relative">
+                <div class="relative z-10">
+                    <p class="text-primary-100 mb-1">Total Completions</p>
+                    <h3 class="text-4xl font-bold">@TotalCompletions</h3>
+                </div>
+                <div class="absolute -right-4 -bottom-4 opacity-20 transform rotate-12">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="card overflow-hidden relative">
+                <p class="text-slate-500 mb-1">Current Best Streak</p>
+                <h3 class="text-4xl font-bold text-slate-900">@BestStreak <span class="text-lg font-normal text-slate-400">days</span></h3>
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 opacity-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.5,12c0,3.037-2.463,5.5-5.5,5.5s-5.5-2.463-5.5-5.5c0-1.879,0.941-3.538,2.378-4.526l0.279-0.191l-0.038,0.336 c-0.086,0.769,0.061,1.554,0.413,2.235l0.177,0.342l0.316-0.224c1.171-0.83,2.029-2.026,2.416-3.367l0.098-0.34l0.174,0.309 C15.824,6.01,17.5,8.809,17.5,12z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Habits -->
+        <section>
+            <div class="flex justify-between items-center mb-6">
+                <h4 class="text-xl font-bold text-slate-900">Today's Focus</h4>
+                <a href="habits" class="text-primary-600 hover:underline text-sm font-medium">View all</a>
+            </div>
+
+            <div class="space-y-4">
+                @if (HabitList == null)
+                {
+                    <div class="animate-pulse space-y-4">
+                        <div class="h-20 bg-slate-200 rounded-2xl"></div>
+                        <div class="h-20 bg-slate-200 rounded-2xl"></div>
+                    </div>
+                }
+                else if (!HabitList.Any())
+                {
+                    <div class="card text-center py-12 border-dashed">
+                        <div class="mb-4 text-slate-300 flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h5 class="text-lg font-semibold text-slate-900">No habits yet</h5>
+                        <p class="text-slate-500 mb-6">Start your journey by adding your first habit.</p>
+                        <button @onclick="() => ShowAddModal = true" class="btn btn-primary">Add Habit</button>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var habit in HabitList)
+                    {
+                        <div class="card flex items-center justify-between group hover:border-primary-200 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style="background-color: @(habit.Color)20; color: @habit.Color">
+                                    @habit.Icon
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-slate-900">@habit.Name</h5>
+                                    <p class="text-sm text-slate-500">Streak: @habit.CurrentStreak days</p>
+                                </div>
+                            </div>
+                            <button @onclick="() => ToggleHabit(habit.Id)" class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all @(habit.IsCompletedToday ? "bg-green-500 border-green-500 text-white" : "border-slate-200 text-transparent hover:border-primary-500")">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+
+    <!-- Sidebar Cards -->
+    <div class="space-y-8">
+        <div class="card bg-slate-900 text-white">
+            <h4 class="text-lg font-bold mb-4">Habit Analysis</h4>
+            <div class="space-y-6">
+                <div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-slate-400">Consistency</span>
+                        <span>85%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div class="bg-primary-500 h-full w-[85%] rounded-full"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-slate-400">Target Reached</span>
+                        <span>12/15 days</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div class="bg-green-500 h-full w-[80%] rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h4 class="text-lg font-bold text-slate-900 mb-4">Quick Stats</h4>
+            <ul class="space-y-4">
+                <li class="flex justify-between items-center">
+                    <span class="text-slate-500">Active Habits</span>
+                    <span class="font-semibold">@HabitList?.Count()</span>
+                </li>
+                <li class="flex justify-between items-center">
+                    <span class="text-slate-500">Perfect Days</span>
+                    <span class="font-semibold text-green-600">8</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@if (ShowAddModal)
+{
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">New Habit</h3>
+                    <button @onclick="() => ShowAddModal = false" class="text-slate-400 hover:text-slate-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Habit Name</label>
+                        <input @bind="NewHabit.Name" type="text" placeholder="e.g. Read 30 mins" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Icon (Emoji)</label>
+                        <input @bind="NewHabit.Icon" type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Theme Color</label>
+                        <div class="flex gap-3">
+                            @foreach (var color in ColorPresets)
+                            {
+                                <button @onclick="() => NewHabit.Color = color" class="w-8 h-8 rounded-full border-2 transition-all @(NewHabit.Color == color ? "border-slate-900 scale-110" : "border-transparent")" style="background-color: @color"></button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-8 bg-slate-50 flex gap-3">
+                <button @onclick="() => ShowAddModal = false" class="btn flex-1 bg-white border border-slate-200 text-slate-600">Cancel</button>
+                <button @onclick="SaveHabit" class="btn flex-1 btn-primary">Create Habit</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private IEnumerable<HabitDto>? HabitList;
+    private bool ShowAddModal;
+    private CreateHabitRequest NewHabit = new();
+    private string[] ColorPresets = { "#4F46E5", "#EF4444", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6" };
+
+    private int TotalCompletions => HabitList?.Sum(h => h.CompletionCount) ?? 0;
+    private int BestStreak => HabitList?.Any() == true ? HabitList.Max(h => h.CurrentStreak) : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHabits();
+    }
+
+    private async Task LoadHabits()
+    {
+        HabitList = await HabitService.GetActiveHabitsAsync();
+    }
+
+    private async Task ToggleHabit(Guid id)
+    {
+        await HabitService.ToggleHabitCompletionAsync(id, DateTime.UtcNow);
+        await LoadHabits();
+    }
+
+    private async Task SaveHabit()
+    {
+        if (string.IsNullOrWhiteSpace(NewHabit.Name)) return;
+        await HabitService.CreateHabitAsync(NewHabit);
+        ShowAddModal = false;
+        NewHabit = new();
+        await LoadHabits();
+    }
+}

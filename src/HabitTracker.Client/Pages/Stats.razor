@@ -1,0 +1,134 @@
+@page "/stats"
+@using HabitTracker.Application.DTOs
+@using HabitTracker.Application.Services
+@inject IHabitService HabitService
+
+<PageTitle>Statistics – Habit Tracker</PageTitle>
+
+<div class="space-y-8">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-900">Statistics</h2>
+        <p class="text-slate-500 text-sm mt-1">Your habit performance at a glance</p>
+    </div>
+
+    @if (HabitList == null)
+    {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @for (int i = 0; i < 3; i++)
+            {
+                <div class="card animate-pulse h-28"><div class="h-full bg-slate-100 rounded-xl"></div></div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card bg-gradient-to-br from-primary-600 to-primary-700 text-white border-none">
+                <p class="text-primary-200 text-sm font-medium mb-1">Total Habits</p>
+                <div class="text-4xl font-bold">@HabitList.Count()</div>
+            </div>
+            <div class="card">
+                <p class="text-slate-500 text-sm font-medium mb-1">Best Streak</p>
+                <div class="text-4xl font-bold text-orange-500">@(HabitList.Any() ? HabitList.Max(h => h.CurrentStreak) : 0) <span class="text-lg font-normal text-slate-400">days</span></div>
+            </div>
+            <div class="card">
+                <p class="text-slate-500 text-sm font-medium mb-1">Total Completions</p>
+                <div class="text-4xl font-bold text-green-600">@HabitList.Sum(h => h.CompletionCount)</div>
+            </div>
+        </div>
+
+        <!-- Per Habit Stats -->
+        @if (!HabitList.Any())
+        {
+            <div class="card text-center py-16">
+                <div class="text-4xl mb-4">📊</div>
+                <h3 class="text-lg font-semibold text-slate-900">No data yet</h3>
+                <p class="text-slate-500">Add habits and start tracking to see statistics here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <h3 class="text-lg font-bold text-slate-900 mb-6">Habit Performance</h3>
+                <div class="space-y-5">
+                    @foreach (var habit in HabitList.OrderByDescending(h => h.CurrentStreak))
+                    {
+                        var maxStreak = HabitList.Any() ? HabitList.Max(h => h.CurrentStreak) : 1;
+                        var pct = maxStreak > 0 ? (int)((double)habit.CurrentStreak / Math.Max(maxStreak, 1) * 100) : 0;
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">@habit.Icon</span>
+                                    <span class="font-semibold text-slate-800">@habit.Name</span>
+                                    @if (habit.IsCompletedToday)
+                                    {
+                                        <span class="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Done Today</span>
+                                    }
+                                </div>
+                                <div class="flex items-center gap-4 text-sm">
+                                    <span class="text-slate-500">🔥 @habit.CurrentStreak day streak</span>
+                                    <span class="text-slate-500">✓ @habit.CompletionCount total</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-700" style="width: @pct%; background-color: @habit.Color;"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Completion Summary Table -->
+            <div class="card overflow-hidden">
+                <h3 class="text-lg font-bold text-slate-900 mb-4">Habit Summary</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200">
+                                <th class="text-left text-slate-500 font-semibold py-2 pr-4">Habit</th>
+                                <th class="text-center text-slate-500 font-semibold py-2 px-4">Current Streak</th>
+                                <th class="text-center text-slate-500 font-semibold py-2 px-4">Total Days</th>
+                                <th class="text-center text-slate-500 font-semibold py-2 pl-4">Today</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var habit in HabitList.OrderByDescending(h => h.CompletionCount))
+                            {
+                                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                    <td class="py-3 pr-4">
+                                        <div class="flex items-center gap-2">
+                                            <span>@habit.Icon</span>
+                                            <span class="font-medium text-slate-900">@habit.Name</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4 text-center font-semibold text-orange-500">@habit.CurrentStreak 🔥</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-slate-700">@habit.CompletionCount</td>
+                                    <td class="py-3 pl-4 text-center">
+                                        @if (habit.IsCompletedToday)
+                                        {
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 font-bold text-xs">✓</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-400 text-xs">–</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private IEnumerable<HabitDto>? HabitList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HabitList = await HabitService.GetActiveHabitsAsync();
+    }
+}
