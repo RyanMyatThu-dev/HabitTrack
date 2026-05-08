@@ -29,3 +29,5 @@ src/HabitTracker.Client/wwwroot/css/app.css
 # Actually, the workflow builds it, so it's better to ignore it if it's an output.
 # But for a small project, sometimes it's easier to keep. 
 # I'll ignore bin/obj and node_modules for sure.
+
+.vercel
